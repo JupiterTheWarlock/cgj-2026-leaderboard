@@ -21,6 +21,7 @@ curl -X POST http://localhost:8787/api/scores \
 ```
 
 `guid` is required as the submit message key. Reusing a `guid` overwrites that previous score row, and `guid` is not returned by public score queries.
+Public score lists return one row per player name: the highest score for that name.
 
 Delete score:
 

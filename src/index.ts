@@ -71,16 +71,27 @@ async function listScores(url: URL, env: Env): Promise<Response> {
   const where = q ? "WHERE player_name LIKE ? COLLATE NOCASE" : "";
   const args = q ? [`%${escapeLike(q)}%`] : [];
   const orderBy = orderClause(sort, order);
+  const bestScores = `
+    SELECT id, player_name, score, duration_ms, created_at
+    FROM (
+      SELECT id, player_name, score, duration_ms, created_at,
+        ROW_NUMBER() OVER (
+          PARTITION BY player_name COLLATE NOCASE
+          ORDER BY score DESC, duration_ms ASC, created_at ASC
+        ) AS row_rank
+      FROM scores
+      ${where}
+    )
+    WHERE row_rank = 1`;
 
   const itemsQuery = env.DB.prepare(
     `SELECT id, player_name AS playerName, score, duration_ms AS durationMs, created_at AS createdAt
-     FROM scores
-     ${where}
+     FROM (${bestScores})
      ORDER BY ${orderBy}
      LIMIT ? OFFSET ?`
   ).bind(...args, pageSize, offset);
 
-  const countQuery = env.DB.prepare(`SELECT COUNT(*) AS total FROM scores ${where}`).bind(...args);
+  const countQuery = env.DB.prepare(`SELECT COUNT(*) AS total FROM (${bestScores})`).bind(...args);
   const [itemsResult, countResult] = await Promise.all([itemsQuery.all(), countQuery.first<{ total: number }>()]);
 
   return json({
