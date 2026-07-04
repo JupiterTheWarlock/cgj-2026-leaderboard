@@ -4,7 +4,7 @@ param(
   [switch]$DryRun
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 $repo = Split-Path -Parent $PSScriptRoot
 Set-Location $repo
 
@@ -79,7 +79,9 @@ if ([string]::IsNullOrWhiteSpace($AdminPassword)) {
     throw "Set ADMIN_PASSWORD as a GitHub secret or pass -AdminPassword."
   }
   $bytes = New-Object byte[] 32
-  [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+  $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+  $rng.GetBytes($bytes)
+  $rng.Dispose()
   $AdminPassword = [Convert]::ToBase64String($bytes).TrimEnd("=")
   Write-Host "Generated ADMIN_PASSWORD (save this now): $AdminPassword"
 }
