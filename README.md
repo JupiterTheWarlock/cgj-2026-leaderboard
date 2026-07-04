@@ -17,8 +17,10 @@ Submit score:
 curl -X POST http://localhost:8787/api/scores \
   -H "content-type: application/json" \
   -H "x-api-password: 12345678" \
-  -d "{\"playerName\":\"AAA\",\"score\":1200,\"durationMs\":83420}"
+  -d "{\"guid\":\"0123456789abcdef0123456789abcdef\",\"playerName\":\"AAA\",\"score\":1200,\"durationMs\":83420}"
 ```
+
+`guid` is required for submit de-duplication and is not returned by public score queries.
 
 Delete score:
 

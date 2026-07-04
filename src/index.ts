@@ -33,14 +33,14 @@ export default {
       }
 
       if (url.pathname === "/api/scores" && request.method === "GET") {
-        return listScores(url, env);
+        return await listScores(url, env);
       }
 
       if (url.pathname === "/api/scores" && request.method === "POST") {
         if (!hasPassword(request, env.SCORE_API_PASSWORD ?? "12345678", "x-api-password")) {
           return json({ error: "bad api password" }, 401);
         }
-        return createScore(request, env);
+        return await createScore(request, env);
       }
 
       const match = url.pathname.match(/^\/api\/scores\/([A-Za-z0-9-]+)$/);
@@ -48,11 +48,14 @@ export default {
         if (!env.ADMIN_PASSWORD || !hasPassword(request, env.ADMIN_PASSWORD, "x-admin-password")) {
           return json({ error: "bad admin password" }, 401);
         }
-        return deleteScore(match[1], env);
+        return await deleteScore(match[1], env);
       }
 
       return json({ error: "not found" }, 404);
     } catch (error) {
+      if (error instanceof PayloadError) {
+        return json({ error: error.message }, 400);
+      }
       return json({ error: error instanceof Error ? error.message : "server error" }, 500);
     }
   }
@@ -91,15 +94,20 @@ async function listScores(url: URL, env: Env): Promise<Response> {
 async function createScore(request: Request, env: Env): Promise<Response> {
   const body = await request.json<unknown>();
   const playerName = readPlayerName(body);
+  const guid = readGuid(body);
   const score = readInteger(body, "score", 0, 2147483647);
   const durationMs = readInteger(body, "durationMs", 0, 86400000);
   const id = crypto.randomUUID();
   const createdAt = new Date().toISOString();
 
-  await env.DB.prepare(
-    `INSERT INTO scores (id, player_name, score, duration_ms, created_at)
-     VALUES (?, ?, ?, ?, ?)`
-  ).bind(id, playerName, score, durationMs, createdAt).run();
+  const result = await env.DB.prepare(
+    `INSERT OR IGNORE INTO scores (id, guid, player_name, score, duration_ms, created_at)
+     VALUES (?, ?, ?, ?, ?, ?)`
+  ).bind(id, guid, playerName, score, durationMs, createdAt).run();
+
+  if (result.meta.changes === 0) {
+    return json({ error: "duplicate guid" }, 409);
+  }
 
   return json({ id, playerName, score, durationMs, createdAt }, 201);
 }
@@ -144,22 +152,35 @@ function escapeLike(value: string): string {
 
 function readPlayerName(body: unknown): string {
   if (!body || typeof body !== "object" || !("playerName" in body)) {
-    throw new Error("playerName is required");
+    throw new PayloadError("playerName is required");
   }
   const playerName = String(body.playerName).trim();
   if (playerName.length < 1 || playerName.length > 24) {
-    throw new Error("playerName must be 1-24 characters");
+    throw new PayloadError("playerName must be 1-24 characters");
   }
   return playerName;
 }
 
+function readGuid(body: unknown): string {
+  if (!body || typeof body !== "object" || !("guid" in body)) {
+    throw new PayloadError("guid is required");
+  }
+  const guid = String((body as Record<string, unknown>).guid).trim().toLowerCase();
+  if (!/^[0-9a-f]{32}$/.test(guid) && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(guid)) {
+    throw new PayloadError("guid is invalid");
+  }
+  return guid;
+}
+
 function readInteger(body: unknown, key: "score" | "durationMs", min: number, max: number): number {
   if (!body || typeof body !== "object" || !(key in body)) {
-    throw new Error(`${key} is required`);
+    throw new PayloadError(`${key} is required`);
   }
   const value = Number((body as Record<string, unknown>)[key]);
   if (!Number.isInteger(value) || value < min || value > max) {
-    throw new Error(`${key} is invalid`);
+    throw new PayloadError(`${key} is invalid`);
   }
   return value;
 }
+
+class PayloadError extends Error {}
