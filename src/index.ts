@@ -100,14 +100,16 @@ async function createScore(request: Request, env: Env): Promise<Response> {
   const id = crypto.randomUUID();
   const createdAt = new Date().toISOString();
 
-  const result = await env.DB.prepare(
-    `INSERT OR IGNORE INTO scores (id, guid, player_name, score, duration_ms, created_at)
-     VALUES (?, ?, ?, ?, ?, ?)`
+  await env.DB.prepare(
+    `INSERT INTO scores (id, guid, player_name, score, duration_ms, created_at)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(guid) DO UPDATE SET
+       id = excluded.id,
+       player_name = excluded.player_name,
+       score = excluded.score,
+       duration_ms = excluded.duration_ms,
+       created_at = excluded.created_at`
   ).bind(id, guid, playerName, score, durationMs, createdAt).run();
-
-  if (result.meta.changes === 0) {
-    return json({ error: "duplicate guid" }, 409);
-  }
 
   return json({ id, playerName, score, durationMs, createdAt }, 201);
 }

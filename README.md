@@ -20,7 +20,7 @@ curl -X POST http://localhost:8787/api/scores \
   -d "{\"guid\":\"0123456789abcdef0123456789abcdef\",\"playerName\":\"AAA\",\"score\":1200,\"durationMs\":83420}"
 ```
 
-`guid` is required for submit de-duplication and is not returned by public score queries.
+`guid` is required as the submit message key. Reusing a `guid` overwrites that previous score row, and `guid` is not returned by public score queries.
 
 Delete score:
 
