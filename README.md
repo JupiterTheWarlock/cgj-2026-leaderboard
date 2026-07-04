@@ -40,6 +40,12 @@ Set `ADMIN_PASSWORD` in `.dev.vars` for local deletes. The score upload password
 
 ## Cloudflare Deployment
 
+Log in first:
+
+```bash
+npx wrangler login
+```
+
 Create the D1 database:
 
 ```bash
