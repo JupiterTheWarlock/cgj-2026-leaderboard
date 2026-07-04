@@ -32,9 +32,17 @@ if ($DryRun) {
   exit 0
 }
 
+if ([string]::IsNullOrWhiteSpace($DatabaseId) -and -not [string]::IsNullOrWhiteSpace($env:D1_DATABASE_ID)) {
+  $DatabaseId = $env:D1_DATABASE_ID
+}
+
+if ([string]::IsNullOrWhiteSpace($AdminPassword) -and -not [string]::IsNullOrWhiteSpace($env:ADMIN_PASSWORD)) {
+  $AdminPassword = $env:ADMIN_PASSWORD
+}
+
 $whoami = & npx wrangler whoami 2>&1
 if ($LASTEXITCODE -ne 0 -or ($whoami -join "`n") -match "not authenticated") {
-  throw "Wrangler is not logged in. Run: npx wrangler login"
+  throw "Wrangler is not authenticated. Run npx wrangler login, or set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID."
 }
 
 $config = Get-WranglerJson
@@ -67,9 +75,13 @@ Save-WranglerJson $config
 Write-Host "Updated wrangler.jsonc database_id: $DatabaseId"
 
 if ([string]::IsNullOrWhiteSpace($AdminPassword)) {
+  if ($env:GITHUB_ACTIONS -eq "true") {
+    throw "Set ADMIN_PASSWORD as a GitHub secret or pass -AdminPassword."
+  }
   $bytes = New-Object byte[] 32
   [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
   $AdminPassword = [Convert]::ToBase64String($bytes).TrimEnd("=")
+  Write-Host "Generated ADMIN_PASSWORD (save this now): $AdminPassword"
 }
 
 Write-Host "`n==> Upload ADMIN_PASSWORD secret"
@@ -82,4 +94,4 @@ Invoke-Step "Apply remote D1 migrations" { npx wrangler d1 migrations apply $db.
 Invoke-Step "Deploy Worker" { npx wrangler deploy }
 
 Write-Host "`nCloudflare deploy complete."
-Write-Host "Admin password was generated for this deployment and not saved to the repo."
+Write-Host "ADMIN_PASSWORD was uploaded as a Cloudflare secret and not saved to the repo."

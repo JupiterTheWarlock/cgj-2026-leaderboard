@@ -1,0 +1,29 @@
+name: Deploy Cloudflare
+
+on:
+  workflow_dispatch:
+    inputs:
+      database_id:
+        description: Existing D1 database_id. Leave empty to create one.
+        required: false
+      admin_password:
+        description: Optional override. Prefer ADMIN_PASSWORD repository secret.
+        required: false
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      D1_DATABASE_ID: ${{ inputs.database_id || secrets.D1_DATABASE_ID }}
+      ADMIN_PASSWORD: ${{ inputs.admin_password || secrets.ADMIN_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Deploy Worker
+        run: npm run deploy:cloudflare

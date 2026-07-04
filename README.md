@@ -40,6 +40,8 @@ Set `ADMIN_PASSWORD` in `.dev.vars` for local deletes. The score upload password
 
 ## Cloudflare Deployment
 
+### Local deploy
+
 Log in first:
 
 ```bash
@@ -52,7 +54,7 @@ Then run the deploy helper:
 npm run deploy:cloudflare
 ```
 
-The helper creates the D1 database, writes the generated `database_id` into `wrangler.jsonc`, generates a random `ADMIN_PASSWORD` secret, applies remote migrations, and deploys the Worker.
+The helper creates the D1 database, writes the generated `database_id` into `wrangler.jsonc`, generates a random `ADMIN_PASSWORD` secret, applies remote migrations, and deploys the Worker. If it generates the admin password locally, save the printed token immediately.
 
 If the D1 database already exists, pass its ID directly:
 
@@ -81,3 +83,17 @@ Before logging in, you can still validate the package locally:
 ```bash
 npm run deploy:dry
 ```
+
+### GitHub Actions deploy
+
+The repo includes a manual `Deploy Cloudflare` workflow. Add these repository secrets first:
+
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+- `ADMIN_PASSWORD`
+
+Optional:
+
+- `D1_DATABASE_ID` if the D1 database already exists.
+
+Run the workflow from GitHub Actions. Leave `database_id` empty to let the workflow create the D1 database.
