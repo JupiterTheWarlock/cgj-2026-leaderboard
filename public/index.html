@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CGJ 2026 Leaderboard</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <canvas id="spaceCanvas" aria-hidden="true"></canvas>
+    <div class="crt" aria-hidden="true"></div>
+
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Anchor Survival telemetry</p>
+          <h1>CGJ 2026 Leaderboard</h1>
+        </div>
+        <button id="refreshBtn" type="button" title="Refresh scores">Refresh</button>
+      </header>
+
+      <section class="controls" aria-label="Leaderboard controls">
+        <label>
+          <span>Search</span>
+          <input id="searchInput" type="search" placeholder="Player name" autocomplete="off">
+        </label>
+        <label>
+          <span>Sort</span>
+          <select id="sortSelect">
+            <option value="score">Score</option>
+            <option value="time">Time</option>
+            <option value="name">Name</option>
+            <option value="duration">Run duration</option>
+          </select>
+        </label>
+        <label>
+          <span>Order</span>
+          <select id="orderSelect">
+            <option value="desc">Desc</option>
+            <option value="asc">Asc</option>
+          </select>
+        </label>
+        <label>
+          <span>Rows</span>
+          <select id="pageSizeSelect">
+            <option>10</option>
+            <option selected>20</option>
+            <option>50</option>
+          </select>
+        </label>
+        <label class="admin-toggle">
+          <span>Admin token</span>
+          <input id="adminInput" type="password" placeholder="Delete token">
+        </label>
+      </section>
+
+      <section class="board" aria-live="polite">
+        <div class="statusline">
+          <span id="statusText">Loading scores...</span>
+          <span id="totalText"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Score</th>
+                <th>Time</th>
+                <th>Run</th>
+                <th class="admin-col">Admin</th>
+              </tr>
+            </thead>
+            <tbody id="scoreRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer class="pager">
+        <button id="prevBtn" type="button">Prev</button>
+        <span id="pageText">Page 1</span>
+        <button id="nextBtn" type="button">Next</button>
+      </footer>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
