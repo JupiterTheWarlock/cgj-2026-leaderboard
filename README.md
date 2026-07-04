@@ -46,7 +46,21 @@ Log in first:
 npx wrangler login
 ```
 
-Create the D1 database:
+Then run the deploy helper:
+
+```bash
+npm run deploy:cloudflare
+```
+
+The helper creates the D1 database, writes the generated `database_id` into `wrangler.jsonc`, generates a random `ADMIN_PASSWORD` secret, applies remote migrations, and deploys the Worker.
+
+If the D1 database already exists, pass its ID directly:
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts/deploy-cloudflare.ps1 -DatabaseId <database_id>
+```
+
+Manual equivalent:
 
 ```bash
 npx wrangler d1 create cgj-2026-leaderboard-db
@@ -61,3 +75,9 @@ npm run deploy
 ```
 
 Generate a random `ADMIN_PASSWORD` at deploy time. Do not commit `.dev.vars`.
+
+Before logging in, you can still validate the package locally:
+
+```bash
+npm run deploy:dry
+```

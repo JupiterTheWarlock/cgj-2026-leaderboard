@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
+    "deploy:cloudflare": "powershell -ExecutionPolicy Bypass -File scripts/deploy-cloudflare.ps1",
+    "deploy:dry": "powershell -ExecutionPolicy Bypass -File scripts/deploy-cloudflare.ps1 -DryRun",
     "db:migrate:local": "wrangler d1 migrations apply cgj-2026-leaderboard-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply cgj-2026-leaderboard-db --remote",
     "check": "tsc --noEmit"
