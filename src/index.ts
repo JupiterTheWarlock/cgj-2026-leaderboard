@@ -8,6 +8,8 @@ export interface Env {
 type SortKey = "score" | "time" | "name" | "duration";
 type SortOrder = "asc" | "desc";
 
+const MAX_SAFE_SCORE = 9007199254740991n;
+
 const JSON_HEADERS = {
   "content-type": "application/json; charset=utf-8",
   "access-control-allow-origin": "*",
@@ -106,7 +108,7 @@ async function createScore(request: Request, env: Env): Promise<Response> {
   const body = await request.json<unknown>();
   const playerName = readPlayerName(body);
   const guid = readGuid(body);
-  const score = readInteger(body, "score", 0, 2147483647);
+  const score = readScore(body);
   const durationMs = readInteger(body, "durationMs", 0, 86400000);
   const id = crypto.randomUUID();
   const createdAt = new Date().toISOString();
@@ -194,6 +196,27 @@ function readInteger(body: unknown, key: "score" | "durationMs", min: number, ma
     throw new PayloadError(`${key} is invalid`);
   }
   return value;
+}
+
+function readScore(body: unknown): number {
+  if (!body || typeof body !== "object" || !("score" in body)) {
+    throw new PayloadError("score is required");
+  }
+
+  const raw = (body as Record<string, unknown>).score;
+  let score: bigint;
+  if (typeof raw === "number") {
+    if (!Number.isInteger(raw) || raw < 0) {
+      throw new PayloadError("score is invalid");
+    }
+    score = BigInt(raw);
+  } else if (typeof raw === "string" && /^[0-9]+$/.test(raw.trim())) {
+    score = BigInt(raw.trim());
+  } else {
+    throw new PayloadError("score is invalid");
+  }
+
+  return Number(score >= MAX_SAFE_SCORE ? MAX_SAFE_SCORE : score);
 }
 
 class PayloadError extends Error {}

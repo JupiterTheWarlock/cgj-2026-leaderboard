@@ -22,6 +22,7 @@ curl -X POST http://localhost:8787/api/scores \
 
 `guid` is required as the submit message key. Reusing a `guid` overwrites that previous score row, and `guid` is not returned by public score queries.
 Public score lists return one row per player name: the highest score for that name.
+`score` accepts a JSON number or an integer string. Scores at or above JavaScript's max safe integer are stored as `9007199254740991`.
 
 Delete score:
 
