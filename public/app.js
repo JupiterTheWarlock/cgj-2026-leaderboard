@@ -1,4 +1,5 @@
 const REFRESH_INTERVAL_MS = 7000;
+const SCORE_UNITS = ["", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"];
 
 const state = {
   page: 1,
@@ -97,7 +98,7 @@ function renderRows(items) {
       <tr>
         <td class="rank">#${rank}</td>
         <td>${escapeHtml(item.playerName)}</td>
-        <td class="score">${Number(item.score).toLocaleString()}</td>
+        <td class="score">${formatScore(item.score)}</td>
         <td>${formatDate(item.createdAt)}</td>
         <td>${formatDuration(item.durationMs)}</td>
         <td class="admin-cell"><button class="delete-btn" type="button" data-id="${item.id}">删除</button></td>
@@ -137,6 +138,20 @@ function formatDuration(ms) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function formatScore(score) {
+  const value = Number(score);
+  if (!Number.isFinite(value)) return "0";
+  if (Math.abs(value) < 1_000_000) return value.toLocaleString();
+
+  const tier = Math.min(Math.floor(Math.log10(Math.abs(value)) / 3) - 1, SCORE_UNITS.length - 1);
+  const scaled = value / (1000 ** (tier + 1));
+  return `${trimDecimals(scaled)}${SCORE_UNITS[tier]}`;
+}
+
+function trimDecimals(value) {
+  return value.toFixed(value >= 100 ? 0 : value >= 10 ? 1 : 2).replace(/\.0+$|(\.\d*[1-9])0+$/, "$1");
 }
 
 function formatDate(value) {
