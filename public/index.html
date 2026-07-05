@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CGJ 2026 Leaderboard</title>
+    <title>你抛不过我你信吗</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
@@ -13,35 +13,35 @@
     <main class="shell">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Anchor Survival telemetry</p>
-          <h1>CGJ 2026 Leaderboard</h1>
+          <p class="eyebrow">现场成绩同步</p>
+          <h1>你抛不过我你信吗</h1>
         </div>
-        <button id="refreshBtn" type="button" title="Refresh scores">Refresh</button>
+        <button id="refreshBtn" type="button" title="刷新成绩">刷新</button>
       </header>
 
-      <section class="controls" aria-label="Leaderboard controls">
+      <section class="controls" aria-label="排行榜控制">
         <label>
-          <span>Search</span>
-          <input id="searchInput" type="search" placeholder="Player name" autocomplete="off">
+          <span>搜索</span>
+          <input id="searchInput" type="search" placeholder="玩家名" autocomplete="off">
         </label>
         <label>
-          <span>Sort</span>
+          <span>排序</span>
           <select id="sortSelect">
-            <option value="score">Score</option>
-            <option value="time">Time</option>
-            <option value="name">Name</option>
-            <option value="duration">Run duration</option>
+            <option value="score">分数</option>
+            <option value="time">提交时间</option>
+            <option value="name">玩家名</option>
+            <option value="duration">单局时长</option>
           </select>
         </label>
         <label>
-          <span>Order</span>
+          <span>顺序</span>
           <select id="orderSelect">
-            <option value="desc">Desc</option>
-            <option value="asc">Asc</option>
+            <option value="desc">降序</option>
+            <option value="asc">升序</option>
           </select>
         </label>
         <label>
-          <span>Rows</span>
+          <span>每页</span>
           <select id="pageSizeSelect">
             <option>10</option>
             <option selected>20</option>
@@ -49,26 +49,26 @@
           </select>
         </label>
         <label class="admin-toggle">
-          <span>Admin token</span>
-          <input id="adminInput" type="password" placeholder="Delete token">
+          <span>管理员密码</span>
+          <input id="adminInput" type="password" placeholder="删除用密码">
         </label>
       </section>
 
       <section class="board" aria-live="polite">
         <div class="statusline">
-          <span id="statusText">Loading scores...</span>
+          <span id="statusText">正在加载成绩...</span>
           <span id="totalText"></span>
         </div>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Rank</th>
-                <th>Player</th>
-                <th>Score</th>
-                <th>Time</th>
-                <th>Run</th>
-                <th class="admin-col">Admin</th>
+                <th>排名</th>
+                <th>玩家</th>
+                <th>分数</th>
+                <th>时间</th>
+                <th>单局</th>
+                <th class="admin-col">管理</th>
               </tr>
             </thead>
             <tbody id="scoreRows"></tbody>
@@ -77,9 +77,9 @@
       </section>
 
       <footer class="pager">
-        <button id="prevBtn" type="button">Prev</button>
-        <span id="pageText">Page 1</span>
-        <button id="nextBtn" type="button">Next</button>
+        <button id="prevBtn" type="button">上一页</button>
+        <span id="pageText">第 1 页</span>
+        <button id="nextBtn" type="button">下一页</button>
       </footer>
     </main>
 

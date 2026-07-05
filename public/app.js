@@ -1,3 +1,5 @@
+const REFRESH_INTERVAL_MS = 7000;
+
 const state = {
   page: 1,
   pageSize: 20,
@@ -43,6 +45,12 @@ els.search.addEventListener("input", debounce(() => updateFilter("q", els.search
 els.admin.addEventListener("input", () => document.body.classList.toggle("admin-on", Boolean(els.admin.value)));
 
 loadScores();
+setInterval(() => {
+  if (!document.hidden) loadScores();
+}, REFRESH_INTERVAL_MS);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) loadScores();
+});
 bootBackground();
 
 function updateFilter(key, value) {
@@ -54,7 +62,7 @@ function updateFilter(key, value) {
 async function loadScores() {
   state.loading = true;
   renderPager();
-  els.status.textContent = "Loading scores...";
+  els.status.textContent = "正在加载成绩...";
 
   const params = new URLSearchParams({
     page: String(state.page),
@@ -67,11 +75,11 @@ async function loadScores() {
   try {
     const response = await fetch(`/api/scores?${params}`);
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Failed to load scores");
+    if (!response.ok) throw new Error(localizeError(data.error) || "加载成绩失败");
     state.total = data.total;
     renderRows(data.items);
-    els.status.textContent = data.items.length ? "Signal locked" : "No scores yet";
-    els.total.textContent = `${data.total} records`;
+    els.status.textContent = data.items.length ? `已同步 ${formatClock(new Date())}` : "暂无成绩";
+    els.total.textContent = `共 ${data.total} 条`;
   } catch (error) {
     els.status.textContent = error.message;
     els.total.textContent = "";
@@ -92,7 +100,7 @@ function renderRows(items) {
         <td class="score">${Number(item.score).toLocaleString()}</td>
         <td>${formatDate(item.createdAt)}</td>
         <td>${formatDuration(item.durationMs)}</td>
-        <td class="admin-cell"><button class="delete-btn" type="button" data-id="${item.id}">Delete</button></td>
+        <td class="admin-cell"><button class="delete-btn" type="button" data-id="${item.id}">删除</button></td>
       </tr>
     `;
   }).join("");
@@ -104,7 +112,7 @@ function renderRows(items) {
 
 async function deleteScore(id) {
   if (!els.admin.value) return;
-  if (!confirm("Delete this score?")) return;
+  if (!confirm("删除这条成绩？")) return;
 
   const response = await fetch(`/api/scores/${id}`, {
     method: "DELETE",
@@ -112,14 +120,14 @@ async function deleteScore(id) {
   });
   const data = await response.json();
   if (!response.ok) {
-    alert(data.error || "Delete failed");
+    alert(localizeError(data.error) || "删除失败");
     return;
   }
   loadScores();
 }
 
 function renderPager() {
-  els.page.textContent = `Page ${state.page}`;
+  els.page.textContent = `第 ${state.page} 页`;
   els.prev.disabled = state.loading || state.page <= 1;
   els.next.disabled = state.loading || state.page * state.pageSize >= state.total;
 }
@@ -132,13 +140,38 @@ function formatDuration(ms) {
 }
 
 function formatDate(value) {
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat("zh-CN", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit"
   }).format(new Date(value));
+}
+
+function formatClock(value) {
+  return new Intl.DateTimeFormat("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  }).format(value);
+}
+
+function localizeError(error) {
+  return ({
+    "bad admin password": "管理员密码错误",
+    "bad api password": "上传密码错误",
+    "not found": "未找到记录",
+    "server error": "服务器错误",
+    "guid is required": "缺少提交编号",
+    "guid is invalid": "提交编号格式错误",
+    "playerName is required": "缺少玩家名",
+    "playerName must be 1-24 characters": "玩家名需为 1-24 个字符",
+    "score is required": "缺少分数",
+    "score is invalid": "分数格式错误",
+    "durationMs is required": "缺少单局时长",
+    "durationMs is invalid": "单局时长格式错误"
+  })[error];
 }
 
 function escapeHtml(value) {
